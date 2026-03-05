@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Student Manager</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+        }
+
+        .container {
+            width: 900px;
+            margin: 40px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        input {
+            padding: 8px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 6px 12px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: #409eff; color: white; }
+        .btn-danger { background: #f56c6c; color: white; }
+        .btn-edit { background: #e6a23c; color: white; }
+        .btn-page { background: #909399; color: white; margin: 10px 5px 0 0; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #f5f7fa;
+        }
+
+        tr:hover {
+            background-color: #f9fafc;
+        }
+
+        .pagination {
+            margin-top: 15px;
+            text-align: right;
+            color: gray;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>新增学生</h2>
+
+    <input type="text" id="name" placeholder="姓名">
+    <input type="number" id="age" placeholder="年龄">
+    <input type="text" id="email" placeholder="邮箱">
+    <button class="btn-primary" onclick="addStudent()">提交</button>
+
+    <h2>学生列表</h2>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>姓名</th>
+            <th>年龄</th>
+            <th>邮箱</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody id="studentTable">
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <button class="btn-page" onclick="prevPage()">上一页</button>
+        <button class="btn-page" onclick="nextPage()">下一页</button>
+        <span id="pageInfo"></span>
+    </div>
+
+</div>
+
+<script>
+
+let currentPage = 0;
+let pageSize = 5;
+
+function loadStudents() {
+
+    fetch(`/students/page?page=${currentPage}&size=${pageSize}`)
+    .then(res => res.json())
+    .then(data => {
+
+        const table = document.getElementById("studentTable");
+        table.innerHTML = "";
+
+        data.content.forEach(student => {
+
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${student.id}</td>
+                <td>${student.name}</td>
+                <td>${student.age}</td>
+                <td>${student.email}</td>
+                <td>
+                    <button class="btn-edit"
+                        onclick="editStudent(${student.id},'${student.name}',${student.age},'${student.email}')">
+                        修改
+                    </button>
+                    <button class="btn-danger"
+                        onclick="deleteStudent(${student.id})">
+                        删除
+                    </button>
+                </td>
+            `;
+
+            table.appendChild(row);
+        });
+
+        document.getElementById("pageInfo").innerText =
+            ` 第 ${data.number + 1} 页 / 共 ${data.totalPages} 页 `;
+    });
+}
+
+function addStudent() {
+    const student = {
+        name: document.getElementById("name").value,
+        age: document.getElementById("age").value,
+        email: document.getElementById("email").value
+    };
+
+    fetch("/students", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(student)
+    })
+    .then(() => loadStudents());
+}
+
+function deleteStudent(id) {
+    fetch("/students/" + id, { method: "DELETE" })
+    .then(() => loadStudents());
+}
+
+function editStudent(id, name, age, email) {
+
+    const newName = prompt("修改姓名", name);
+    const newAge = prompt("修改年龄", age);
+    const newEmail = prompt("修改邮箱", email);
+
+    const student = {
+        name: newName,
+        age: newAge,
+        email: newEmail
+    };
+
+    fetch("/students/" + id, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(student)
+    })
+    .then(() => loadStudents());
+}
+
+function nextPage() {
+    currentPage++;
+    loadStudents();
+}
+
+function prevPage() {
+    if(currentPage > 0){
+        currentPage--;
+        loadStudents();
+    }
+}
+
+loadStudents();
+
+</script>
+
+</body>
+</html>
