@@ -2,6 +2,7 @@ package com.example.demo3.service;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -48,8 +49,22 @@ public class StudentServiceImpl implements StudentService {
     }
 
      @Override
-    public Page<Student> getPage(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return repository.findAll(pageable);
-    }
+    public Page<Student> getPage(int page, int size, String sort, String direction) {
+
+    Sort.Direction dir = direction.equals("desc")
+            ? Sort.Direction.DESC
+            : Sort.Direction.ASC;
+
+    return repository.findAll(
+            PageRequest.of(page, size, Sort.by(dir, sort))
+    );
+}
+    @Override
+public Page<Student> search(String name, int page, int size) {
+
+    return repository.findByNameContaining(
+            name,
+            PageRequest.of(page, size)
+    );
+}
 }

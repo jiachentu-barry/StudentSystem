@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+
+
 @RestController
 @RequestMapping("/students")
 public class StudentController {
@@ -53,10 +55,21 @@ public class StudentController {
     }
 
     @GetMapping("/page")
-    public Page<Student> getPage(
+public Page<Student> getPage(
+        @RequestParam int page,
+        @RequestParam int size,
+        @RequestParam(defaultValue = "id") String sort,
+        @RequestParam(defaultValue = "asc") String direction) {
+
+    return service.getPage(page, size, sort, direction);
+}
+
+@GetMapping("/search")
+public Page<Student> search(
+        @RequestParam String name,
         @RequestParam int page,
         @RequestParam int size) {
 
-    return service.getPage(page, size);
+    return service.search(name, page, size);
 }
 }
